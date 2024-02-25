@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:latest
+    volumes:
+      - postdb:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - backend
+  api:
+    image: api:latest
+    build: ./api
+    depends_on:
+      - database
+    ports:
+      - "${FAST_RUN_PORT}:8000"
+    networks:
+      - backend
+  tamweb:
+    image: tamweb:latest
+    build: ./tamweb
+    #command: [" ng serve --host 0.0.0.0"]
+    #command: ["npm install -g @angular/cli", "tail -f /dev/null" ]
+    command: tail -f /dev/null
+    volumes:
+      - ./tamweb:/app/
+    ports:
+      - 4200:4200
+    depends_on:
+      - api
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+volumes:
+  postdb:
